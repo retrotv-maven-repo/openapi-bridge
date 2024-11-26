@@ -1,9 +1,6 @@
 package kr.go.data;
 
-import dev.retrotv.openapi.AsyncHttpClient;
-import dev.retrotv.openapi.JSONRequest;
-import dev.retrotv.openapi.Query;
-import dev.retrotv.openapi.XMLRequest;
+import dev.retrotv.openapi.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +8,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -19,7 +16,8 @@ class IpasCountryCodeAPITest {
 
     @Test
     @DisplayName("connect() 메소드 테스트")
-    void connect() throws IOException {
+    void connect() throws IOException, ExecutionException, InterruptedException {
+        ExecutorService es = Executors.newCachedThreadPool();
 
         // given
         Set<Query> queries = new HashSet<>();
@@ -29,18 +27,12 @@ class IpasCountryCodeAPITest {
 
         // when
         System.out.println("XML 가져오기 시작");
-        CompletableFuture.supplyAsync(() -> {
-            try {
-                XMLRequest request = new XMLRequest(IpasCountryCodeAPI.getAPI(queries));
-                AsyncHttpClient ahc = AsyncHttpClient.getClient(request);
-                return ahc.call();
-            } catch (Exception e) {
-                return "";
-            }
-        }).thenAccept(result -> {
-            System.out.println("XML 결과 (thenApply): " + result);
-            assertNotNull(result);
-        }).join();
+        Request request = new XMLRequest(IpasCountryCodeAPI.getAPI(queries));
+        AsyncHttpClient ahc = AsyncHttpClient.getClient(request);
+        Future<String> future = es.submit(ahc);
+        String value = future.get();
+        assertNotNull(value);
+        System.out.println(value);
         System.out.println("XML 가져오기 종료");
 
         queries.clear();
@@ -49,18 +41,12 @@ class IpasCountryCodeAPITest {
         queries.add(new Query("answer", "json"));
 
         System.out.println("JSON 가져오기 시작");
-        CompletableFuture.supplyAsync(() -> {
-            try {
-                JSONRequest request = new JSONRequest(IpasCountryCodeAPI.getAPI(queries));
-                AsyncHttpClient ahc = AsyncHttpClient.getClient(request);
-                return ahc.call();
-            } catch (Exception e) {
-                return "";
-            }
-        }).thenAccept(result -> {
-            System.out.println("JSON 결과 (thenApply): " + result);
-            assertNotNull(result);
-        }).join();
+        request = new JSONRequest(IpasCountryCodeAPI.getAPI(queries));
+        ahc = AsyncHttpClient.getClient(request);
+        future = es.submit(ahc);
+        value = future.get();
+        assertNotNull(value);
+        System.out.println(value);
         System.out.println("JSON 가져오기 종료");
     }
 }
