@@ -1,6 +1,9 @@
 package kr.go.data;
 
 import dev.retrotv.openapi.*;
+import dev.retrotv.openapi.request.JSONRequest;
+import dev.retrotv.openapi.request.Request;
+import dev.retrotv.openapi.request.XMLRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +14,6 @@ import java.util.Set;
 import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 class IpasCountryCodeAPITest {
 
@@ -25,11 +27,12 @@ class IpasCountryCodeAPITest {
             throw new IllegalArgumentException("SERVICE_KEY 환경 변수가 설정되어 있지 않습니다.");
         }
         
-        try (ExecutorService es = Executors.newCachedThreadPool()) {
+        ExecutorService es = Executors.newCachedThreadPool();
+        try {
 
             // given
             Set<Query> queries = new HashSet<>();
-            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, UTF_8)));
+            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, "UTF-8")));
             queries.add(new Query("query", "127.0.0.1"));
             queries.add(new Query("answer", "xml"));
 
@@ -44,7 +47,7 @@ class IpasCountryCodeAPITest {
             System.out.println("XML 가져오기 종료");
 
             queries.clear();
-            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, UTF_8)));
+            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, "UTF-8")));
             queries.add(new Query("query", "127.0.0.1"));
             queries.add(new Query("answer", "json"));
 
@@ -56,6 +59,8 @@ class IpasCountryCodeAPITest {
             assertNotNull(value);
             System.out.println(value);
             System.out.println("JSON 가져오기 종료");
+        } finally {
+            es.shutdown();
         }
     }
 }

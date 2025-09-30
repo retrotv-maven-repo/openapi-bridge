@@ -7,6 +7,8 @@ import java.net.HttpURLConnection;
 import java.util.concurrent.Callable;
 
 import dev.retrotv.openapi.exception.ConnectionFailException;
+import dev.retrotv.openapi.request.Request;
+import lombok.NonNull;
 
 public class AsyncHttpClient implements Callable<String> {
     private final HttpURLConnection httpURLConnection;
@@ -15,11 +17,13 @@ public class AsyncHttpClient implements Callable<String> {
         this.httpURLConnection = request.getHttpURLConnection();
     }
 
-    public static AsyncHttpClient getClient(Request request) {
-        if (request == null) {
-            throw new IllegalArgumentException("request는 null일 수 없습니다.");
-        }
-
+    /**
+     * AsyncHttpClient 인스턴스를 생성합니다.
+     * @param request Request 객체
+     * @return AsyncHttpClient 인스턴스
+     */
+    @NonNull
+    public static AsyncHttpClient getClient(@NonNull Request request) {
         return new AsyncHttpClient(request);
     }
 
@@ -28,9 +32,7 @@ public class AsyncHttpClient implements Callable<String> {
         try {
             this.httpURLConnection.connect();
         } catch (IOException ex) {
-            if (this.httpURLConnection != null) {
-                this.httpURLConnection.disconnect();
-            }
+            this.httpURLConnection.disconnect();
             throw new ConnectionFailException("서버 연결에 실패했습니다.", ex);
         }
         
@@ -46,9 +48,7 @@ public class AsyncHttpClient implements Callable<String> {
 
             return response.toString();
         } finally {
-            if (this.httpURLConnection != null) {
-                this.httpURLConnection.disconnect();
-            }
+            this.httpURLConnection.disconnect();
         }
     }
 }
