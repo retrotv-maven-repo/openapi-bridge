@@ -6,16 +6,18 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.util.concurrent.Callable;
 
+import dev.retrotv.openapi.exception.ConnectionFailException;
+
 public class AsyncHttpClient implements Callable<String> {
     private final HttpURLConnection httpURLConnection;
 
-    private AsyncHttpClient(Request request) throws IOException {
+    private AsyncHttpClient(Request request) {
         this.httpURLConnection = request.getHttpURLConnection();
     }
 
-    public static AsyncHttpClient getClient(Request request) throws IOException {
-        if (request == null || request.getHttpURLConnection() == null) {
-            throw new IllegalArgumentException("request 및 request.getHttpURLConnection()는 null일 수 없습니다.");
+    public static AsyncHttpClient getClient(Request request) {
+        if (request == null) {
+            throw new IllegalArgumentException("request는 null일 수 없습니다.");
         }
 
         return new AsyncHttpClient(request);
@@ -23,17 +25,30 @@ public class AsyncHttpClient implements Callable<String> {
 
     @Override
     public String call() throws Exception {
-        this.httpURLConnection.connect();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(this.httpURLConnection.getInputStream()));
-        StringBuilder response = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            response.append(line);
+        try {
+            this.httpURLConnection.connect();
+        } catch (IOException ex) {
+            if (this.httpURLConnection != null) {
+                this.httpURLConnection.disconnect();
+            }
+            throw new ConnectionFailException("서버 연결에 실패했습니다.", ex);
         }
-        reader.close();
+        
+        try (
+            InputStreamReader ip = new InputStreamReader(this.httpURLConnection.getInputStream());
+            BufferedReader reader = new BufferedReader(ip)
+        ) {
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
 
-        this.httpURLConnection.disconnect();
-
-        return response.toString();
+            return response.toString();
+        } finally {
+            if (this.httpURLConnection != null) {
+                this.httpURLConnection.disconnect();
+            }
+        }
     }
 }

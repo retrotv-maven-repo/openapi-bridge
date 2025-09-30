@@ -1,35 +1,29 @@
 package dev.retrotv.openapi;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.*;
 
-public class JSONRequest implements Request {
-    private final OpenAPI api;
+import dev.retrotv.openapi.exception.ConnectionFailException;
 
+public class JSONRequest extends Request {
     public JSONRequest(OpenAPI api) {
-        this.api = api;
+        super(api);
     }
 
     @Override
-    public HttpURLConnection getHttpURLConnection() throws IOException {
-        HttpURLConnection connection = (HttpURLConnection) buildURL().openConnection();
-        connection.setRequestMethod("GET");
-        connection.setRequestProperty("Content-Type", "application/json");
-        connection.setDoOutput(true);
-        connection.setDoInput(true);
-
-        return connection;
-    }
-
-    private URL buildURL() throws MalformedURLException {
-        StringBuilder sb = new StringBuilder(api.getUrl());
-        for (Query query : api.getQueries()) {
-            sb.append(query.getQuery()).append("&");
+    public HttpURLConnection getHttpURLConnection() {
+        try {
+            HttpURLConnection connection = (HttpURLConnection) this.buildURL().openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+            connection.setDoInput(true);
+    
+            return connection;
+        } catch (ProtocolException ex) {
+            throw new ConnectionFailException("유효한 HTTP 메서드가 아닙니다.", ex);
+        } catch (IOException ex) {
+            throw new ConnectionFailException("API 연결에 실패했습니다.", ex);
         }
-        sb.deleteCharAt(sb.length() - 1);
-
-        return new URL(sb.toString());
     }
 }
