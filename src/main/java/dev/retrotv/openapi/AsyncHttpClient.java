@@ -35,7 +35,7 @@ public class AsyncHttpClient implements Callable<String> {
             this.httpURLConnection.disconnect();
             throw new ConnectionFailException("서버 연결에 실패했습니다.", ex);
         }
-        
+
         try (
             InputStreamReader ip = new InputStreamReader(this.httpURLConnection.getInputStream());
             BufferedReader reader = new BufferedReader(ip)

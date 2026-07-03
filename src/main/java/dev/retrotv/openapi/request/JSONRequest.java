@@ -26,7 +26,7 @@ public class JSONRequest extends Request {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setDoOutput(true);
             connection.setDoInput(true);
-    
+
             return connection;
         } catch (ProtocolException ex) {
             throw new ConnectionFailException("유효한 HTTP 메서드가 아닙니다.", ex);

@@ -2,7 +2,6 @@ package kr.go.data;
 
 import dev.retrotv.openapi.*;
 import dev.retrotv.openapi.core.DotEnv;
-import dev.retrotv.openapi.request.JSONRequest;
 import dev.retrotv.openapi.request.Request;
 import dev.retrotv.openapi.request.XMLRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -16,7 +15,7 @@ import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-class IpasCountryCodeAPITest {
+class EMFInfoAPITest {
 
     /*
      * SERVICE_KEY 환경 변수 로드
@@ -50,32 +49,20 @@ class IpasCountryCodeAPITest {
             // given
             Set<Query> queries = new HashSet<>();
             queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, "UTF-8")));
-            queries.add(new Query("query", "127.0.0.1"));
-            queries.add(new Query("answer", "xml"));
+            queries.add(new Query("STAGE1", URLEncoder.encode("인천광역시", "UTF-8")));
+            queries.add(new Query("STAGE2", URLEncoder.encode("연수구", "UTF-8")));
 
             // when
             System.out.println("XML 가져오기 시작");
-            Request request = new XMLRequest(IpasCountryCodeAPI.getAPI(queries));
+            OpenAPI api = new EMFInfoAPI();
+            api.setQueries(queries);
+            Request request = new XMLRequest(api);
             AsyncHttpClient ahc = AsyncHttpClient.getClient(request);
             Future<String> future = es.submit(ahc);
             String value = future.get();
             assertNotNull(value);
             System.out.println(value);
             System.out.println("XML 가져오기 종료");
-
-            queries.clear();
-            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, "UTF-8")));
-            queries.add(new Query("query", "127.0.0.1"));
-            queries.add(new Query("answer", "json"));
-
-            System.out.println("JSON 가져오기 시작");
-            request = new JSONRequest(IpasCountryCodeAPI.getAPI(queries));
-            ahc = AsyncHttpClient.getClient(request);
-            future = es.submit(ahc);
-            value = future.get();
-            assertNotNull(value);
-            System.out.println(value);
-            System.out.println("JSON 가져오기 종료");
         } finally {
             es.shutdown();
         }
