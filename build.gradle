@@ -1,28 +1,142 @@
 plugins {
     id 'java'
+    id 'jacoco'
+    id 'maven-publish'
+    id 'com.vanniktech.maven.publish' version '0.36.0'
+    id 'org.sonarqube' version '7.0.1.6134'
 }
 
 group = 'dev.retrotv'
 version = '0.0.1-alpha'
 
-repositories {
-    mavenCentral()
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+// Github Action 버전 출력용
+tasks.register('printVersionName') {
+    description = '이 프로젝트의 버전을 출력합니다.'
+    group = JavaBasePlugin.DOCUMENTATION_GROUP
+    doLast {
+        println project.version
+    }
 }
 
-dependencies {
-    implementation 'org.projectlombok:lombok:1.18.42'
-    annotationProcessor 'org.projectlombok:lombok:1.18.42'
+allprojects {
+    version = rootProject.version
+    group = rootProject.group
 
-    testImplementation platform('org.junit:junit-bom:5.13.4')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    repositories {
+        mavenCentral()
+    }
 }
 
-test {
-    useJUnitPlatform()
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+    apply plugin: 'com.vanniktech.maven.publish'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+        toolchain {
+            languageVersion = JavaLanguageVersion.of((project.findProperty('targetJava') ?: '8').toString().toInteger())
+        }
+    }
+
+    tasks.withType(Javadoc).configureEach {
+        options.with {
+            charSet = 'UTF-8'      // HTML charset
+            encoding = 'UTF-8'     // 소스 읽기 인코딩
+            docEncoding = 'UTF-8'  // 출력 파일 인코딩
+        }
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+
+    def slf4j = '2.0.18'
+    def log4j = '2.26.0'
+    def junit = '5.13.1'
+    def lombok = '1.18.42'
+
+    dependencies {
+        compileOnly "org.projectlombok:lombok:${lombok}"
+        annotationProcessor "org.projectlombok:lombok:${lombok}"
+
+        // Logger
+        compileOnly "org.slf4j:slf4j-api:${slf4j}"
+        testImplementation "org.slf4j:slf4j-api:${slf4j}"
+        testImplementation "org.apache.logging.log4j:log4j-core:${log4j}"
+        testImplementation "org.apache.logging.log4j:log4j-slf4j2-impl:${log4j}"
+
+        testCompileOnly "org.projectlombok:lombok:${lombok}"
+        testAnnotationProcessor "org.projectlombok:lombok:${lombok}"
+
+        testImplementation platform("org.junit:junit-bom:${junit}")
+        testImplementation "org.junit.jupiter:junit-jupiter"
+        testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+    }
+
+    mavenPublishing {
+        publishToMavenCentral()
+        signAllPublications()
+        coordinates(group.toString(), project.name, version as String)
+
+        pom {
+            name = 'openapi-bridge'
+            description = 'OpenAPI 자원을 편하게 활용하기 위한 라이브러리 입니다.'
+            inceptionYear = '2026'
+            url = 'https://github.com/retrotv-maven-repo/openapi-bridge'
+
+            licenses {
+                license {
+                    name = 'The Apache License, Version 2.0'
+                    url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                }
+            }
+
+            developers {
+                developer {
+                    id = 'yjj8353'
+                    name = 'JaeJun Yang'
+                    email = 'yjj8353@gmail.com'
+                }
+            }
+
+            scm {
+                connection = 'scm:git:git://github.com/retrotv-maven-repo/openapi-bridge.git'
+                developerConnection = 'scm:git:ssh://github.com/retrotv-maven-repo/openapi-bridge.git'
+                url = 'https://github.com/retrotv-maven-repo/openapi-bridge.git'
+            }
+        }
+
+        publishing {
+            repositories {
+                // Github Packages에 배포하기 위한 설정
+                maven {
+                    name = 'GitHubPackages'
+                    url = URI.create('https://maven.pkg.github.com/retrotv-maven-repo/openapi-bridge')
+                    credentials {
+                        username = System.getenv('USERNAME')
+                        password = System.getenv('PASSWORD')
+                    }
+                }
+            }
+        }
+    }
+
+    tasks.withType(Sign).configureEach {
+        onlyIf {
+            def graph = gradle.taskGraph
+            !graph.allTasks.any { task ->
+                task.path.endsWith('PublicationToMavenLocal') ||
+                        task.path.endsWith('PublicationToGitHubPackagesRepository')
+            }
+        }
+    }
 }
+
+apply from: "${rootDir}/gradle/sonarcloud.gradle"
+apply from: "${rootDir}/gradle/jacoco.gradle"

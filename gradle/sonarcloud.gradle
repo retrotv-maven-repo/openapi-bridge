@@ -1,0 +1,7 @@
+sonar {
+    properties {
+        property("sonar.projectKey", "retrotv-maven-repo_openapi-bridge")
+        property("sonar.organization", "retrotv-maven-repo")
+        property("sonar.host.url", "https://sonarcloud.io")
+    }
+}

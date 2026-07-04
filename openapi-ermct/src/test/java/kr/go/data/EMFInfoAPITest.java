@@ -1,7 +1,9 @@
 package kr.go.data;
 
-import dev.retrotv.openapi.*;
-import dev.retrotv.openapi.core.DotEnv;
+import dev.retrotv.openapi.AsyncHttpClient;
+import dev.retrotv.openapi.OpenAPI;
+import dev.retrotv.openapi.Query;
+import dev.retrotv.openapi.common.DotEnv;
 import dev.retrotv.openapi.request.Request;
 import dev.retrotv.openapi.request.XMLRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -9,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -48,9 +51,9 @@ class EMFInfoAPITest {
 
             // given
             Set<Query> queries = new HashSet<>();
-            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, "UTF-8")));
-            queries.add(new Query("STAGE1", URLEncoder.encode("인천광역시", "UTF-8")));
-            queries.add(new Query("STAGE2", URLEncoder.encode("연수구", "UTF-8")));
+            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, StandardCharsets.UTF_8.displayName())));
+            queries.add(new Query("STAGE1", URLEncoder.encode("인천광역시", StandardCharsets.UTF_8.displayName())));
+            queries.add(new Query("STAGE2", URLEncoder.encode("연수구", StandardCharsets.UTF_8.displayName())));
 
             // when
             System.out.println("XML 가져오기 시작");

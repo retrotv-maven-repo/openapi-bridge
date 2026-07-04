@@ -1,7 +1,8 @@
 package kr.go.data;
 
-import dev.retrotv.openapi.*;
-import dev.retrotv.openapi.core.DotEnv;
+import dev.retrotv.openapi.AsyncHttpClient;
+import dev.retrotv.openapi.Query;
+import dev.retrotv.openapi.common.DotEnv;
 import dev.retrotv.openapi.request.JSONRequest;
 import dev.retrotv.openapi.request.Request;
 import dev.retrotv.openapi.request.XMLRequest;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -49,7 +51,7 @@ class IpasCountryCodeAPITest {
 
             // given
             Set<Query> queries = new HashSet<>();
-            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, "UTF-8")));
+            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, StandardCharsets.UTF_8.displayName())));
             queries.add(new Query("query", "127.0.0.1"));
             queries.add(new Query("answer", "xml"));
 
@@ -64,7 +66,7 @@ class IpasCountryCodeAPITest {
             System.out.println("XML 가져오기 종료");
 
             queries.clear();
-            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, "UTF-8")));
+            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, StandardCharsets.UTF_8.displayName())));
             queries.add(new Query("query", "127.0.0.1"));
             queries.add(new Query("answer", "json"));
 

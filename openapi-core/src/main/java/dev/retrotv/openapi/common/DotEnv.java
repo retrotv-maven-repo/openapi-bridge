@@ -1,4 +1,4 @@
-package dev.retrotv.openapi.core;
+package dev.retrotv.openapi.common;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,7 +10,7 @@ public class DotEnv {
     private Path envPath = Paths.get(".env");
 
     public DotEnv() {
-        this.envPath = Paths.get(".env");
+        this.envPath = Paths.get("../.env");
     }
 
     public String get(String key) {

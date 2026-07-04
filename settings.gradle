@@ -1,2 +1,5 @@
 rootProject.name = 'openapi-bridge'
 
+include 'openapi-core'
+include 'openapi-whois'
+include 'openapi-ermct'
