@@ -7,7 +7,7 @@ import dev.retrotv.openapi.Query;
 import lombok.NonNull;
 
 public class EMFInfoAPI implements OpenAPI {
-    private final String url = "https://apis.data.go.kr/B552657/ErmctInfoInqireService/getEmrrmRltmUsefulSckbdInfoInqire?";
+    private final String url = "https://apis.data.go.kr/B552657/ErmctInfoInqireService/getEmrrmRltmUsefulSckbdInfoInqire";
     private Set<Query> queries;
 
     @Override

@@ -19,6 +19,7 @@ import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class IpasCountryCodeAPITest {
+    private static final AsyncHttpClient client = new AsyncHttpClient();
 
     /*
      * SERVICE_KEY 환경 변수 로드
@@ -41,7 +42,7 @@ class IpasCountryCodeAPITest {
 
     @Test
     @DisplayName("connect() 메소드 테스트")
-    void connect() throws IOException, ExecutionException, InterruptedException {
+    void connect() throws IOException {
         if (SERVICE_KEY == null || SERVICE_KEY.isEmpty()) {
             throw new IllegalArgumentException("SERVICE_KEY 환경 변수가 설정되어 있지 않습니다.");
         }
@@ -58,9 +59,7 @@ class IpasCountryCodeAPITest {
             // when
             System.out.println("XML 가져오기 시작");
             Request request = new XMLRequest(IpasCountryCodeAPI.getAPI(queries));
-            AsyncHttpClient ahc = AsyncHttpClient.getClient(request);
-            Future<String> future = es.submit(ahc);
-            String value = future.get();
+            String value = client.get(request).join();
             assertNotNull(value);
             System.out.println(value);
             System.out.println("XML 가져오기 종료");
@@ -72,9 +71,7 @@ class IpasCountryCodeAPITest {
 
             System.out.println("JSON 가져오기 시작");
             request = new JSONRequest(IpasCountryCodeAPI.getAPI(queries));
-            ahc = AsyncHttpClient.getClient(request);
-            future = es.submit(ahc);
-            value = future.get();
+            value = client.get(request).join();
             assertNotNull(value);
             System.out.println(value);
             System.out.println("JSON 가져오기 종료");

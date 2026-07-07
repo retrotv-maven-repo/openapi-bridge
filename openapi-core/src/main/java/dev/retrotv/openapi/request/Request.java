@@ -1,10 +1,7 @@
 package dev.retrotv.openapi.request;
 
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.io.IOException;
+import java.net.*;
 
 import dev.retrotv.openapi.OpenAPI;
 import dev.retrotv.openapi.Query;
@@ -13,9 +10,25 @@ import lombok.NonNull;
 
 public abstract class Request {
     protected final OpenAPI api;
+    protected final HttpURLConnection conn;
 
-    protected Request(@NonNull OpenAPI api) {
+    Request(@NonNull OpenAPI api) {
         this.api = api;
+        try {
+            this.conn = (HttpURLConnection) this.buildURL().openConnection();
+            this.conn.setRequestMethod("GET");
+            this.conn.setDoOutput(true);
+            this.conn.setDoInput(true);
+        } catch (ProtocolException ex) {
+            throw new ConnectionFailException("유효한 HTTP 메서드가 아닙니다.", ex);
+        } catch (IOException ex) {
+            throw new ConnectionFailException("API 연결에 실패했습니다.", ex);
+        }
+    }
+
+    @NonNull
+    public OpenAPI getApi() {
+        return this.api;
     }
 
     /**
@@ -29,6 +42,7 @@ public abstract class Request {
     @NonNull
     protected URL buildURL() {
         StringBuilder sb = new StringBuilder(api.getUrl());
+        sb.append('?');
         for (Query query : api.getQueries()) {
             sb.append(query.getQuery()).append("&");
         }

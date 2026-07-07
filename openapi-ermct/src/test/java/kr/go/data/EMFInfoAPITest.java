@@ -19,6 +19,7 @@ import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class EMFInfoAPITest {
+    private static final AsyncHttpClient client = new AsyncHttpClient();
 
     /*
      * SERVICE_KEY 환경 변수 로드
@@ -60,9 +61,7 @@ class EMFInfoAPITest {
             OpenAPI api = new EMFInfoAPI();
             api.setQueries(queries);
             Request request = new XMLRequest(api);
-            AsyncHttpClient ahc = AsyncHttpClient.getClient(request);
-            Future<String> future = es.submit(ahc);
-            String value = future.get();
+            String value = client.get(request).get();
             assertNotNull(value);
             System.out.println(value);
             System.out.println("XML 가져오기 종료");

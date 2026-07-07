@@ -1,54 +1,79 @@
 package dev.retrotv.openapi;
 
+import dev.retrotv.openapi.exception.ConnectionFailException;
+import dev.retrotv.openapi.request.Request;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.util.concurrent.Callable;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import dev.retrotv.openapi.exception.ConnectionFailException;
-import dev.retrotv.openapi.request.Request;
-import lombok.NonNull;
+public class AsyncHttpClient {
 
-public class AsyncHttpClient implements Callable<String> {
-    private final HttpURLConnection httpURLConnection;
+    // HTTP 전용 스레드 풀 정의 (Blocking I/O로 인한 스레드 고갈 방지)
+    private final ExecutorService executor;
 
-    private AsyncHttpClient(Request request) {
-        this.httpURLConnection = request.getHttpURLConnection();
+    // 기본 생성자: 유동적으로 개수가 조절되는 스레드 풀 생성
+    public AsyncHttpClient() {
+        this.executor = Executors.newCachedThreadPool();
+    }
+
+    // 기본 생성자: 적절한 크기의 고정 스레드 풀 생성
+    public AsyncHttpClient(int poolSize) {
+        this.executor = Executors.newFixedThreadPool(poolSize);
+    }
+
+    // 기본 생성자: 커스텀 스레드 풀을 주입받을 수 있는 생성자 (DI)
+    public AsyncHttpClient(ExecutorService executor) {
+        this.executor = executor;
     }
 
     /**
-     * AsyncHttpClient 인스턴스를 생성합니다.
-     * @param request Request 객체
-     * @return AsyncHttpClient 인스턴스
+     * 비동기 GET 요청을 보내는 메서드
+     *
+     * @param request 요청 객체
+     * @return CompletableFuture<String> 응답 문자열을 담은 미래 객체
      */
-    @NonNull
-    public static AsyncHttpClient getClient(@NonNull Request request) {
-        return new AsyncHttpClient(request);
+    public CompletableFuture<String> get(Request request) {
+        return CompletableFuture.supplyAsync(() -> {
+            HttpURLConnection conn = request.getHttpURLConnection();
+
+            // 기본 타임아웃 설정 (매우 중요!)
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+
+            try {
+                int responseCode = conn.getResponseCode();
+                if (responseCode >= 200 && responseCode < 300) {
+                    try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                        StringBuilder response = new StringBuilder();
+                        String inputLine;
+                        while ((inputLine = in.readLine()) != null) {
+                            response.append(inputLine);
+                        }
+
+                        return response.toString();
+                    }
+                } else {
+                    throw new ConnectionFailException("HTTP 요청 실패. Status Code: " + responseCode);
+                }
+            } catch (IOException e) {
+                // 여기서 발생한 예외는 CompletableFuture의 exceptionally 단계로 전달됨
+                throw new ConnectionFailException("비동기 HTTP 요청 중 예외 발생", e);
+            } finally {
+                conn.disconnect();
+            }
+        }, executor);
     }
 
-    @Override
-    public String call() throws Exception {
-        try {
-            this.httpURLConnection.connect();
-        } catch (IOException ex) {
-            this.httpURLConnection.disconnect();
-            throw new ConnectionFailException("서버 연결에 실패했습니다.", ex);
-        }
-
-        try (
-            InputStreamReader ip = new InputStreamReader(this.httpURLConnection.getInputStream());
-            BufferedReader reader = new BufferedReader(ip)
-        ) {
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-
-            return response.toString();
-        } finally {
-            this.httpURLConnection.disconnect();
+    // 애플리케이션 종료 시 스레드 풀을 닫아주기 위한 메서드
+    public void shutdown() {
+        if (executor != null && !executor.isShutdown()) {
+            executor.shutdown();
         }
     }
 }

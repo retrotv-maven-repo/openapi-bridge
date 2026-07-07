@@ -6,7 +6,7 @@ import lombok.NonNull;
 import java.util.Set;
 
 public class IpasCountryCodeAPI extends WhoisAPI {
-    private final String url = getBaseUrl() + "/ipas_country_code?";
+    private final String url = getBaseUrl() + "/ipas_country_code";
 
     private IpasCountryCodeAPI(Set<Query> queries) {
         this.setQueries(queries);
