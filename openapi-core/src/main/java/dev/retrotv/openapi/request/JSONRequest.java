@@ -3,6 +3,7 @@ package dev.retrotv.openapi.request;
 import java.net.*;
 
 import dev.retrotv.openapi.OpenAPI;
+import dev.retrotv.openapi.enums.ContentType;
 import lombok.NonNull;
 
 public class JSONRequest extends Request {
@@ -13,12 +14,6 @@ public class JSONRequest extends Request {
      */
     public JSONRequest(@NonNull OpenAPI api) {
         super(api);
-    }
-
-    @NonNull
-    @Override
-    public HttpURLConnection getHttpURLConnection() {
-        this.conn.setRequestProperty("Content-Type", "application/json");
-        return this.conn;
+        this.contentType = ContentType.JSON;
     }
 }

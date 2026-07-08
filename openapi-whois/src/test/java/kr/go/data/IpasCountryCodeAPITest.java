@@ -1,6 +1,6 @@
 package kr.go.data;
 
-import dev.retrotv.openapi.AsyncHttpClient;
+import dev.retrotv.openapi.client.AsyncHttpClient;
 import dev.retrotv.openapi.Query;
 import dev.retrotv.openapi.common.DotEnv;
 import dev.retrotv.openapi.request.JSONRequest;
@@ -19,7 +19,6 @@ import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class IpasCountryCodeAPITest {
-    private static final AsyncHttpClient client = new AsyncHttpClient();
 
     /*
      * SERVICE_KEY 환경 변수 로드
@@ -47,36 +46,32 @@ class IpasCountryCodeAPITest {
             throw new IllegalArgumentException("SERVICE_KEY 환경 변수가 설정되어 있지 않습니다.");
         }
 
-        ExecutorService es = Executors.newCachedThreadPool();
-        try {
+        // given
+        Set<Query> queries = new HashSet<>();
+        queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, StandardCharsets.UTF_8.displayName())));
+        queries.add(new Query("query", "127.0.0.1"));
+        queries.add(new Query("answer", "xml"));
 
-            // given
-            Set<Query> queries = new HashSet<>();
-            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, StandardCharsets.UTF_8.displayName())));
-            queries.add(new Query("query", "127.0.0.1"));
-            queries.add(new Query("answer", "xml"));
+        // when
+        System.out.println("XML 가져오기 시작");
+        Request request = new XMLRequest(IpasCountryCodeAPI.getAPI(queries));
+        AsyncHttpClient cli1 = new AsyncHttpClient(request);
+        String value = cli1.get().join();
+        assertNotNull(value);
+        System.out.println(value);
+        System.out.println("XML 가져오기 종료");
 
-            // when
-            System.out.println("XML 가져오기 시작");
-            Request request = new XMLRequest(IpasCountryCodeAPI.getAPI(queries));
-            String value = client.get(request).join();
-            assertNotNull(value);
-            System.out.println(value);
-            System.out.println("XML 가져오기 종료");
+        queries.clear();
+        queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, StandardCharsets.UTF_8.displayName())));
+        queries.add(new Query("query", "127.0.0.1"));
+        queries.add(new Query("answer", "json"));
 
-            queries.clear();
-            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, StandardCharsets.UTF_8.displayName())));
-            queries.add(new Query("query", "127.0.0.1"));
-            queries.add(new Query("answer", "json"));
-
-            System.out.println("JSON 가져오기 시작");
-            request = new JSONRequest(IpasCountryCodeAPI.getAPI(queries));
-            value = client.get(request).join();
-            assertNotNull(value);
-            System.out.println(value);
-            System.out.println("JSON 가져오기 종료");
-        } finally {
-            es.shutdown();
-        }
+        System.out.println("JSON 가져오기 시작");
+        request = new JSONRequest(IpasCountryCodeAPI.getAPI(queries));
+        AsyncHttpClient cli2 = new AsyncHttpClient(request);
+        value = cli2.get().join();
+        assertNotNull(value);
+        System.out.println(value);
+        System.out.println("JSON 가져오기 종료");
     }
 }

@@ -3,6 +3,7 @@ package dev.retrotv.openapi.request;
 import java.net.*;
 
 import dev.retrotv.openapi.OpenAPI;
+import dev.retrotv.openapi.enums.ContentType;
 import lombok.NonNull;
 
 public class XMLRequest extends Request {
@@ -13,12 +14,6 @@ public class XMLRequest extends Request {
      */
     public XMLRequest(@NonNull OpenAPI api) {
         super(api);
-    }
-
-    @NonNull
-    @Override
-    public HttpURLConnection getHttpURLConnection() {
-        this.conn.setRequestProperty("Content-Type", "application/xml");
-        return this.conn;
+        this.contentType = ContentType.XML;
     }
 }

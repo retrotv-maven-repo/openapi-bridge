@@ -1,6 +1,6 @@
 package kr.go.data;
 
-import dev.retrotv.openapi.AsyncHttpClient;
+import dev.retrotv.openapi.client.AsyncHttpClient;
 import dev.retrotv.openapi.OpenAPI;
 import dev.retrotv.openapi.Query;
 import dev.retrotv.openapi.common.DotEnv;
@@ -19,7 +19,6 @@ import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class EMFInfoAPITest {
-    private static final AsyncHttpClient client = new AsyncHttpClient();
 
     /*
      * SERVICE_KEY 환경 변수 로드
@@ -47,26 +46,21 @@ class EMFInfoAPITest {
             throw new IllegalArgumentException("SERVICE_KEY 환경 변수가 설정되어 있지 않습니다.");
         }
 
-        ExecutorService es = Executors.newCachedThreadPool();
-        try {
+        // given
+        Set<Query> queries = new HashSet<>();
+        queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, StandardCharsets.UTF_8.displayName())));
+        queries.add(new Query("STAGE1", URLEncoder.encode("인천광역시", StandardCharsets.UTF_8.displayName())));
+        queries.add(new Query("STAGE2", URLEncoder.encode("연수구", StandardCharsets.UTF_8.displayName())));
 
-            // given
-            Set<Query> queries = new HashSet<>();
-            queries.add(new Query("serviceKey", URLEncoder.encode(SERVICE_KEY, StandardCharsets.UTF_8.displayName())));
-            queries.add(new Query("STAGE1", URLEncoder.encode("인천광역시", StandardCharsets.UTF_8.displayName())));
-            queries.add(new Query("STAGE2", URLEncoder.encode("연수구", StandardCharsets.UTF_8.displayName())));
-
-            // when
-            System.out.println("XML 가져오기 시작");
-            OpenAPI api = new EMFInfoAPI();
-            api.setQueries(queries);
-            Request request = new XMLRequest(api);
-            String value = client.get(request).get();
-            assertNotNull(value);
-            System.out.println(value);
-            System.out.println("XML 가져오기 종료");
-        } finally {
-            es.shutdown();
-        }
+        // when
+        System.out.println("XML 가져오기 시작");
+        OpenAPI api = new EMFInfoAPI();
+        api.setQueries(queries);
+        Request request = new XMLRequest(api);
+        AsyncHttpClient client = new AsyncHttpClient(request);
+        String value = client.get().get();
+        assertNotNull(value);
+        System.out.println(value);
+        System.out.println("XML 가져오기 종료");
     }
 }
