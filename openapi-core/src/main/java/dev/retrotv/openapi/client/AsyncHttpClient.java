@@ -2,6 +2,9 @@ package dev.retrotv.openapi.client;
 
 import dev.retrotv.openapi.exception.ConnectionFailException;
 import dev.retrotv.openapi.request.Request;
+import dev.retrotv.openapi.response.JSONResponse;
+import dev.retrotv.openapi.response.Response;
+import dev.retrotv.openapi.response.XMLResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,6 +13,8 @@ import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
+
+import static dev.retrotv.openapi.enums.ContentType.*;
 
 public class AsyncHttpClient {
     private static final int CONNECT_TIMEOUT = 5000;
@@ -23,9 +28,9 @@ public class AsyncHttpClient {
     /**
      * 비동기 GET 요청을 보내는 메서드
      *
-     * @return CompletableFuture<String> 응답 문자열을 담은 미래 객체
+     * @return CompletableFuture<Response> Response 객체를 담은 미래 객체
      */
-    public CompletableFuture<String> get() {
+    public CompletableFuture<Response> get() {
 
         // supplyAsync 메서드 내부에서 발생한 예외는 CompletableFuture의 exceptionally 단계로 전달됨
         return CompletableFuture.supplyAsync(() -> {
@@ -40,13 +45,7 @@ public class AsyncHttpClient {
                 int responseCode = conn.getResponseCode();
                 if (responseCode >= 200 && responseCode < 300) {
                     try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                        StringBuilder response = new StringBuilder();
-                        String inputLine;
-                        while ((inputLine = in.readLine()) != null) {
-                            response.append(inputLine);
-                        }
-
-                        return response.toString();
+                        return getResponse(request, readBody(in));
                     }
                 } else {
                     throw new ConnectionFailException("HTTP 요청 실패. Status Code: " + responseCode);
@@ -71,5 +70,25 @@ public class AsyncHttpClient {
         } catch (IOException ex) {
             throw new ConnectionFailException("API 연결에 실패했습니다.", ex);
         }
+    }
+
+    private static Response getResponse(Request request, String responseBody) {
+        if (XML.equals(request.getContentType())) {
+            return new XMLResponse(responseBody);
+        } else if (JSON.equals(request.getContentType())) {
+            return new JSONResponse(responseBody);
+        } else {
+            throw new ConnectionFailException("Invalid content type: " + request.getContentType());
+        }
+    }
+
+    private static String readBody(BufferedReader in) throws IOException {
+        StringBuilder responseBody = new StringBuilder();
+        String inputLine;
+        while ((inputLine = in.readLine()) != null) {
+            responseBody.append(inputLine);
+        }
+
+        return responseBody.toString();
     }
 }

@@ -22,6 +22,11 @@ public abstract class Request {
     }
 
     @NonNull
+    public ContentType getContentType() {
+        return this.contentType;
+    }
+
+    @NonNull
     public URL buildURL() {
         StringBuilder sb = new StringBuilder(api.getUrl());
         sb.append('?');

@@ -6,6 +6,7 @@ import dev.retrotv.openapi.Query;
 import dev.retrotv.openapi.common.DotEnv;
 import dev.retrotv.openapi.request.Request;
 import dev.retrotv.openapi.request.XMLRequest;
+import dev.retrotv.openapi.response.Response;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -58,7 +59,8 @@ class EMFInfoAPITest {
         api.setQueries(queries);
         Request request = new XMLRequest(api);
         AsyncHttpClient client = new AsyncHttpClient(request);
-        String value = client.get().get();
+        Response response = client.get().get();
+        String value = response.getBody();
         assertNotNull(value);
         System.out.println(value);
         System.out.println("XML 가져오기 종료");

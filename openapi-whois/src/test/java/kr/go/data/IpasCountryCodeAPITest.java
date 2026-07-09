@@ -6,6 +6,7 @@ import dev.retrotv.openapi.common.DotEnv;
 import dev.retrotv.openapi.request.JSONRequest;
 import dev.retrotv.openapi.request.Request;
 import dev.retrotv.openapi.request.XMLRequest;
+import dev.retrotv.openapi.response.Response;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +15,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -56,7 +56,8 @@ class IpasCountryCodeAPITest {
         System.out.println("XML 가져오기 시작");
         Request request = new XMLRequest(IpasCountryCodeAPI.getAPI(queries));
         AsyncHttpClient cli1 = new AsyncHttpClient(request);
-        String value = cli1.get().join();
+        Response response = cli1.get().join();
+        String value = response.getBody();
         assertNotNull(value);
         System.out.println(value);
         System.out.println("XML 가져오기 종료");
@@ -69,7 +70,8 @@ class IpasCountryCodeAPITest {
         System.out.println("JSON 가져오기 시작");
         request = new JSONRequest(IpasCountryCodeAPI.getAPI(queries));
         AsyncHttpClient cli2 = new AsyncHttpClient(request);
-        value = cli2.get().join();
+        response = cli2.get().join();
+        value = response.getBody();
         assertNotNull(value);
         System.out.println(value);
         System.out.println("JSON 가져오기 종료");

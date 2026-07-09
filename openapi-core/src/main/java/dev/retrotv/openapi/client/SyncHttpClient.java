@@ -2,6 +2,9 @@ package dev.retrotv.openapi.client;
 
 import dev.retrotv.openapi.exception.ConnectionFailException;
 import dev.retrotv.openapi.request.Request;
+import dev.retrotv.openapi.response.JSONResponse;
+import dev.retrotv.openapi.response.Response;
+import dev.retrotv.openapi.response.XMLResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -9,6 +12,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.nio.charset.StandardCharsets;
+
+import static dev.retrotv.openapi.enums.ContentType.JSON;
+import static dev.retrotv.openapi.enums.ContentType.XML;
 
 public class SyncHttpClient {
     private static final int CONNECT_TIMEOUT = 5000;
@@ -19,7 +25,7 @@ public class SyncHttpClient {
         this.request = request;
     }
 
-    public String get() {
+    public Response get() {
         HttpURLConnection conn = createHttpURLConnection(this.request);
         try {
             conn.setRequestMethod("GET");
@@ -31,13 +37,7 @@ public class SyncHttpClient {
             int responseCode = conn.getResponseCode();
             if (responseCode >= 200 && responseCode < 300) {
                 try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                    StringBuilder response = new StringBuilder();
-                    String inputLine;
-                    while ((inputLine = in.readLine()) != null) {
-                        response.append(inputLine);
-                    }
-
-                    return response.toString();
+                    return getResponse(request, readBody(in));
                 }
             } else {
                 throw new ConnectionFailException("HTTP 요청 실패. Status Code: " + responseCode);
@@ -61,5 +61,25 @@ public class SyncHttpClient {
         } catch (IOException ex) {
             throw new ConnectionFailException("API 연결에 실패했습니다.", ex);
         }
+    }
+
+    private static Response getResponse(Request request, String responseBody) {
+        if (XML.equals(request.getContentType())) {
+            return new XMLResponse(responseBody);
+        } else if (JSON.equals(request.getContentType())) {
+            return new JSONResponse(responseBody);
+        } else {
+            throw new ConnectionFailException("Invalid content type: " + request.getContentType());
+        }
+    }
+
+    private static String readBody(BufferedReader in) throws IOException {
+        StringBuilder responseBody = new StringBuilder();
+        String inputLine;
+        while ((inputLine = in.readLine()) != null) {
+            responseBody.append(inputLine);
+        }
+
+        return responseBody.toString();
     }
 }
