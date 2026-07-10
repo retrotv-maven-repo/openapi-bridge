@@ -11,17 +11,31 @@ import lombok.NonNull;
 
 import java.util.Map;
 
-@Getter
+/**
+ * 추상 응답 클래스
+ */
 public abstract class Response {
     protected final ObjectMapper mapper;
     protected final ContentType contentType;
-    protected String body;
+    protected final String body;
+
+    @Getter
     protected int statusCode;
 
-    Response(ObjectMapper mapper, ContentType contentType, String body) {
+    Response(@NonNull ObjectMapper mapper, @NonNull ContentType contentType, @NonNull String body) {
         this.mapper = mapper;
         this.contentType = contentType;
         this.body = body;
+    }
+
+    @NonNull
+    public ContentType getContentType() {
+        return this.contentType;
+    }
+
+    @NonNull
+    public String getBody() {
+        return this.body;
     }
 
     @NonNull

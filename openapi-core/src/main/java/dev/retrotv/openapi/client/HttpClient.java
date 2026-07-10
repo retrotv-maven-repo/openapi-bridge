@@ -16,6 +16,11 @@ import java.nio.charset.StandardCharsets;
 import static dev.retrotv.openapi.enums.ContentType.JSON;
 import static dev.retrotv.openapi.enums.ContentType.XML;
 
+/**
+ * API 요청을 위한 추상 HTTP 클라이언트 클래스입니다.
+ * @see dev.retrotv.openapi.client.SyncHttpClient
+ * @see dev.retrotv.openapi.client.AsyncHttpClient
+ */
 public abstract class HttpClient {
     protected static final int CONNECT_TIMEOUT = 5000;
     protected static final int READ_TIMEOUT = 5000;
